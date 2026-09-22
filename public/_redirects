@@ -1,8 +1,6 @@
-/ /user.html 200
-/index.html /user.html 200
-/admin /admin.html 200
-/admin/ /admin.html 200
-/cs2bisai /user.html 200
-/cs2bisai/ /user.html 200
-/cs2bisai/admin /admin.html 200
-/cs2bisai/admin/ /admin.html 200
+/ /user 200
+/index.html /user 200
+/cs2bisai /user 200
+/cs2bisai/ /user 200
+/cs2bisai/admin /admin 200
+/cs2bisai/admin/ /admin 200
