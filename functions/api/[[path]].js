@@ -63,7 +63,7 @@ async function rate(env, key, limit, win) {
   return true;
 }
 async function touch(env) {
-  const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
+  const now = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 19).replace('T', ' ');
   await env.DB.prepare('INSERT INTO site_settings(setting_key,setting_value) VALUES(?,?) ON CONFLICT(setting_key) DO UPDATE SET setting_value=?').bind('last_modified', now, now).run();
 }
 function event(row) {
