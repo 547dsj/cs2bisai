@@ -1,0 +1,8 @@
+name = "cs2bisai"
+compatibility_date = "2026-09-22"
+pages_build_output_dir = "public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "cs2bisai"
+database_id = "fa1db2d7-cb0b-4527-bdb5-bfbf3a3b9c8a"

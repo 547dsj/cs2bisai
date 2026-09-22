@@ -957,7 +957,7 @@
 
 
     <script>
-    const API_BASE = window.APP_API_BASE || '/api';
+    const API_BASE = window.APP_API_BASE || '';
     const ORG_OPTIONS = ['ESL', 'EWC', 'BLAST', 'FISSURE', 'PGL', 'StarLadder', '完美世界', '其他'];
 
     let eventsData = [];
@@ -1612,7 +1612,7 @@
 
     async function checkAdminSession() {
         try {
-            const res = await fetch(`${API_BASE}/admin/check`, { credentials: 'include' });
+    const res = await fetch(`${API_BASE}/api/admin/check`, { credentials: 'include' });
             if (res.ok) {
                 const data = await res.json();
                 return data.authenticated === true;
@@ -1628,7 +1628,7 @@
         btn.disabled = true;
         btn.textContent = '验证中...';
         try {
-            const res = await fetch(`${API_BASE}/admin/login`, {
+    const res = await fetch(`${API_BASE}/api/admin/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ password: pw }),
