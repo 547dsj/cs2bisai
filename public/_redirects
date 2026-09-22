@@ -1,0 +1,8 @@
+/ /user.html 200
+/index.html /user.html 200
+/admin /admin.html 200
+/admin/ /admin.html 200
+/cs2bisai /user.html 200
+/cs2bisai/ /user.html 200
+/cs2bisai/admin /admin.html 200
+/cs2bisai/admin/ /admin.html 200
