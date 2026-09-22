@@ -1,0 +1,1621 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS2 赛事全景 · 用户浏览</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+    </script>
+    <script src="/static/config.js"></script>
+    <style>
+        /* ===== 全局重置 & 暗黑主题 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+        }
+        body {
+            background: #0b0e14;
+            color: #e8edf5;
+            padding: 24px;
+            min-height: 100vh;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1a1f2a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3b82f6;
+            border-radius: 8px;
+        }
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+        .main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 28px;
+            background: #131a24;
+            border-radius: 18px;
+            border: 1px solid #2a3648;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+        .main-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+            text-shadow: 0 0 20px rgba(96, 165, 250, 0.2);
+        }
+        .main-header .sub {
+            font-size: 14px;
+            color: #8896ab;
+            background: #1f2836;
+            padding: 6px 16px;
+            border-radius: 40px;
+            border: 1px solid #2f3c4e;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 18px;
+            margin-bottom: 28px;
+        }
+        .stat-card {
+            background: #131a24;
+            padding: 20px 18px;
+            border-radius: 16px;
+            border: 1px solid #253040;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+            transition: 0.2s ease;
+        }
+        .stat-card:hover {
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+        }
+        .stat-card .label {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #8896ab;
+        }
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-top: 6px;
+            color: #f0f4fe;
+        }
+        .stat-card .value span {
+            font-size: 16px;
+            font-weight: 400;
+            color: #8896ab;
+            margin-left: 6px;
+        }
+        /* 三栏布局 */
+        .triple-panel {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr 1.2fr;
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+        @media (max-width: 1000px) {
+            .triple-panel {
+                grid-template-columns: 1fr 1fr;
+            }
+            .triple-panel .panel:last-child {
+                grid-column: span 2;
+            }
+        }
+        @media (max-width: 700px) {
+            .triple-panel {
+                grid-template-columns: 1fr;
+            }
+            .triple-panel .panel:last-child {
+                grid-column: 1;
+            }
+        }
+        .panel {
+            background: #111922;
+            border-radius: 16px;
+            border: 1px solid #253040;
+            padding: 18px 20px 22px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+        .panel h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #a0b3d0;
+            letter-spacing: 0.5px;
+            margin-bottom: 14px;
+            border-bottom: 1px solid #1f2a38;
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .panel h3 i {
+            font-style: normal;
+            background: #1f2a38;
+            padding: 0 10px;
+            border-radius: 30px;
+            font-size: 12px;
+            color: #6a7f9e;
+        }
+        .panel h3 .timeline-toggle {
+            margin-left: auto;
+            background: #1f2a38;
+            border: 1px solid #2f3c4e;
+            color: #c8d6e8;
+            padding: 4px 16px;
+            border-radius: 30px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: 400;
+        }
+        .panel h3 .timeline-toggle:hover {
+            background: #2f3c4e;
+            border-color: #3b82f6;
+        }
+        .mvp-list, .champion-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 360px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .mvp-item, .champion-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: #0e151f;
+            border-radius: 40px;
+            border-left: 3px solid #3b82f6;
+            cursor: default;
+        }
+        .champion-item {
+            border-left-color: #a78bfa;
+            flex-wrap: wrap;
+        }
+        .mvp-item .name, .champion-item .name {
+            font-weight: 500;
+        }
+        .mvp-item .count, .champion-item .count {
+            background: #1f2a38;
+            padding: 2px 14px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #60a5fa;
+        }
+        .champion-item .count {
+            color: #a78bfa;
+        }
+        .mvp-item .medal {
+            margin-right: 8px;
+            font-size: 18px;
+        }
+        .champion-item .expand-btn-sm {
+            background: none;
+            border: 1px solid #2f3c4e;
+            color: #8896ab;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 6px;
+        }
+        .champion-item .expand-btn-sm:hover {
+            border-color: #a78bfa;
+            color: #c8d6e8;
+            background: #1a2330;
+        }
+        .champion-detail {
+            width: 100%;
+            padding: 6px 12px 6px 28px;
+            font-size: 13px;
+            color: #8896ab;
+            background: #0a111c;
+            border-radius: 8px;
+            margin-top: 4px;
+            display: none;
+            list-style: none;
+        }
+        .champion-detail li {
+            padding: 3px 0;
+            border-bottom: 1px solid #1a2330;
+        }
+        .champion-detail li:last-child {
+            border-bottom: none;
+        }
+        .champion-detail .event-name {
+            color: #d6e2f5;
+        }
+        .champion-detail .event-date {
+            color: #6a7f9e;
+            margin-left: 8px;
+        }
+        .timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 360px;
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+        .tl-item {
+            display: flex;
+            align-items: baseline;
+            gap: 14px;
+            font-size: 14px;
+            padding: 6px 8px;
+            border-radius: 8px;
+            background: #0d141e;
+            border-bottom: 1px solid #1a2330;
+        }
+        .tl-item .date {
+            color: #8896ab;
+            font-size: 13px;
+            min-width: 80px;
+        }
+        .tl-item .event {
+            color: #d6e2f5;
+            font-weight: 500;
+        }
+        .tl-item .badge {
+            font-size: 11px;
+            background: #1f2a38;
+            padding: 0 10px;
+            border-radius: 30px;
+            color: #a0b3d0;
+            margin-left: auto;
+            white-space: nowrap;
+        }
+        .tl-item .badge.major {
+            background: #8b5cf6;
+            color: #fff;
+        }
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 16px 20px;
+            background: #111922;
+            padding: 16px 24px;
+            border-radius: 40px;
+            border: 1px solid #253040;
+            margin-bottom: 28px;
+        }
+        .filter-bar label {
+            font-size: 13px;
+            color: #8896ab;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .filter-bar select,
+        .filter-bar input {
+            background: #0b0e14;
+            color: #e8edf5;
+            border: 1px solid #2a3648;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 14px;
+            outline: none;
+            cursor: pointer;
+        }
+        .filter-bar select:focus,
+        .filter-bar input:focus {
+            border-color: #3b82f6;
+        }
+        .filter-bar .reset-btn {
+            background: #1f2a38;
+            border: none;
+            color: #c8d6e8;
+            padding: 6px 20px;
+            border-radius: 40px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-left: auto;
+        }
+        .filter-bar .reset-btn:hover {
+            background: #2f3c4e;
+            color: #fff;
+        }
+        .table-wrap {
+            background: #111922;
+            border-radius: 16px;
+            border: 1px solid #253040;
+            padding: 6px 4px 4px 4px;
+            overflow-x: auto;
+            margin-bottom: 28px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            min-width: 1100px;
+        }
+        thead {
+            background: #0c141f;
+            border-bottom: 2px solid #1f2a38;
+        }
+        th {
+            text-align: left;
+            padding: 14px 12px;
+            font-weight: 600;
+            color: #8896ab;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        td {
+            padding: 12px 12px;
+            border-bottom: 1px solid #1a2330;
+            color: #d6e2f5;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        tr:hover td {
+            background: #0f1825;
+        }
+        .expand-btn {
+            background: none;
+            border: 1px solid #2f3c4e;
+            color: #a0b3d0;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .expand-btn:hover {
+            border-color: #3b82f6;
+            color: #60a5fa;
+            background: #1a2330;
+        }
+        .detail-row {
+            display: none;
+            background: #0d1622;
+        }
+        .detail-row td {
+            padding: 12px 20px;
+            border-bottom: 1px solid #1f2a38;
+        }
+        .detail-row .detail-content {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 14px;
+        }
+        .detail-row .detail-content .vs-line {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .detail-row .detail-content .vs-line .score {
+            color: #fbbf24;
+            font-size: 18px;
+            padding: 0 8px;
+        }
+        .detail-row .detail-content .vs-line .team-name {
+            color: #e8edf5;
+        }
+        .detail-row .detail-content .vs-line .trophy {
+            margin-right: 4px;
+        }
+        .detail-row .detail-content .roster-block {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px 30px;
+            margin-top: 4px;
+        }
+        .detail-row .detail-content .roster-block .roster-item {
+            color: #8896ab;
+            font-size: 13px;
+        }
+        .detail-row .detail-content .roster-block .roster-item strong {
+            color: #c8d6e8;
+        }
+        .org-tag {
+            background: #1f2a38;
+            padding: 2px 12px;
+            border-radius: 30px;
+            font-size: 12px;
+            display: inline-block;
+            color: #a0b3d0;
+        }
+        .level-tag {
+            background: #2a1f3a;
+            color: #c4b5e0;
+            padding: 2px 12px;
+            border-radius: 30px;
+            font-size: 12px;
+            display: inline-block;
+        }
+        .level-tag.major {
+            background: #4c2d7a;
+            color: #d8c4ff;
+            font-weight: 600;
+        }
+        .mvp-name {
+            color: #60a5fa;
+            font-weight: 500;
+        }
+        .mvp-name.tbd {
+            color: #6a7f9e;
+            font-style: italic;
+        }
+        .prize {
+            color: #fbbf24;
+            font-weight: 500;
+        }
+        .location {
+            color: #a0b3d0;
+        }
+        .date-range {
+            color: #c8d6e8;
+            white-space: nowrap;
+        }
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-top: 8px;
+            margin-bottom: 20px;
+        }
+        @media (max-width: 860px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .chart-box {
+            background: #111922;
+            border-radius: 16px;
+            border: 1px solid #253040;
+            padding: 18px 16px 16px;
+        }
+        .chart-box h4 {
+            font-size: 15px;
+            font-weight: 500;
+            color: #a0b3d0;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .chart-box canvas {
+            max-height: 220px;
+            max-width: 100%;
+        }
+        .footer {
+            text-align: center;
+            color: #4a5a72;
+            font-size: 13px;
+            padding: 20px 0 6px;
+            border-top: 1px solid #1a2330;
+            margin-top: 16px;
+        }
+        .text-muted {
+            color: #6a7f9e;
+        }
+                            body.readonly .toolbar { display: none; }
+        body.readonly .actions, body.readonly th:last-child { display: none; }
+        body.readonly .edit-btn { display: none; }
+/* ===== 年份选择 ===== */
+        .year-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+        .year-btn {
+            background: #131a24;
+            border: 1px solid #2f3c4e;
+            color: #a0b3d0;
+            padding: 9px 22px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: 0.2s ease;
+        }
+        .year-btn:hover {
+            border-color: #3b82f6;
+            color: #ffffff;
+        }
+        .year-btn.active {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: #ffffff;
+        }
+        .sub-edit-btn {
+            margin-left: 8px;
+            background: #1f2836;
+            border: 1px solid #2f3c4e;
+            color: #c8d6e8;
+            padding: 3px 12px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .sub-edit-btn:hover {
+            border-color: #3b82f6;
+            color: #ffffff;
+        }
+        .modal-card.small {
+            width: min(420px, 100%);
+        }
+/* ===== 工具栏 ===== */
+        .toolbar {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .btn {
+            border: 1px solid #2f3c4e;
+            background: #1f2836;
+            color: #c8d6e8;
+            padding: 9px 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.2s ease;
+        }
+        .btn:hover {
+            border-color: #3b82f6;
+            color: #ffffff;
+        }
+        .btn-primary {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: #ffffff;
+        }
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+        .btn-danger {
+            background: transparent;
+            border-color: #ef4444;
+            color: #fca5a5;
+        }
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.12);
+            color: #ffffff;
+        }
+        .btn-danger.active {
+            background: #ef4444;
+            border-color: #ef4444;
+            color: #ffffff;
+        }
+        .edit-btn {
+            background: #1f2a38;
+            border: 1px solid #2f3c4e;
+            color: #a0b3d0;
+            padding: 5px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: 0.2s ease;
+        }
+        .edit-btn:hover {
+            border-color: #3b82f6;
+            color: #ffffff;
+        }
+        #cancelDeleteBtn {
+            display: none;
+        }
+        body.delete-mode #cancelDeleteBtn {
+            display: inline-block;
+        }
+        #selectAll, .row-checkbox {
+            display: none;
+            width: 16px;
+            height: 16px;
+            accent-color: #3b82f6;
+            cursor: pointer;
+        }
+        body.delete-mode #selectAll,
+        body.delete-mode .row-checkbox {
+            display: inline-block;
+        }
+        body.delete-mode .expand-btn {
+            display: none;
+        }
+
+        /* ===== 弹窗表单 ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(3, 7, 12, 0.78);
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            padding: 20px;
+        }
+        .modal-card {
+            width: min(760px, 100%);
+            max-height: 90vh;
+            overflow: auto;
+            background: #131a24;
+            border: 1px solid #2f3c4e;
+            border-radius: 18px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+            padding: 22px;
+        }
+        .modal-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+        .modal-head h2 {
+            font-size: 20px;
+            color: #e8edf5;
+        }
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: #8896ab;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .modal-close:hover {
+            color: #ffffff;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+        .form-grid .full {
+            grid-column: span 2;
+        }
+        @media (max-width: 640px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .form-grid .full {
+                grid-column: 1;
+            }
+        }
+        .form-field label {
+            display: block;
+            font-size: 13px;
+            color: #a0b3d0;
+            margin-bottom: 6px;
+        }
+        .form-field input,
+        .form-field select {
+            width: 100%;
+            padding: 10px 12px;
+            background: #0f1620;
+            border: 1px solid #253040;
+            border-radius: 10px;
+            color: #e8edf5;
+            font-size: 14px;
+            outline: none;
+        }
+        .form-field input:focus,
+        .form-field select:focus {
+            border-color: #3b82f6;
+        }
+        .form-field .hint {
+            display: block;
+            font-size: 12px;
+            color: #6a7f9e;
+            margin-top: 4px;
+        }
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        </style>
+</head>
+<body class="readonly">
+<div class="container">
+    <header class="main-header">
+        <h1>⚡ CS2 赛事全景</h1>
+        <div class="sub">🏆 S级赛事 &amp; Major · 最后修改时间 <span id="lastModified">--</span></div>
+    </header>
+    <div class="year-bar" id="yearBar"></div>
+    <div class="stats-grid" id="statsGrid"></div>
+    <!-- 三栏面板 -->
+    <div class="triple-panel">
+        <!-- MVP榜 -->
+        <div class="panel">
+            <h3>🏅 MVP 荣誉榜 <i>次数</i></h3>
+            <div class="mvp-list" id="mvpList"></div>
+        </div>
+        <!-- 时间线 -->
+        <div class="panel">
+            <h3>
+                📅 赛事时间线 <i>正序</i>
+                <button class="timeline-toggle" id="timelineToggle">切换倒序</button>
+            </h3>
+            <div class="timeline" id="timeline"></div>
+        </div>
+        <!-- 夺冠队伍榜 -->
+        <div class="panel">
+            <h3>🏆 夺冠队伍榜 <i>次数</i></h3>
+            <div class="champion-list" id="championList"></div>
+        </div>
+    </div>
+    <!-- 筛选器 -->
+    <div class="filter-bar">
+        <label>🏛️ 主办方
+            <select id="orgFilter"><option value="all">全部</option></select>
+        </label>
+        <label>📊 赛事级别
+            <select id="levelFilter"><option value="all">全部</option></select>
+        </label>
+        <label>📅 时间
+            <select id="monthFilter"><option value="all">全部月份</option></select>
+        </label>
+        <button class="reset-btn" id="resetFilters">⟳ 重置筛选</button>
+    </div>
+        <div class="toolbar">
+        <button class="btn btn-primary" id="addBtn">＋ 添加比赛</button>
+        <button class="btn btn-danger" id="deleteBtn">🗑️ 删除比赛</button>
+        <button class="btn" id="cancelDeleteBtn">取消删除</button>
+    </div>
+
+    <!-- 表格 -->
+    <div class="table-wrap">
+        <table>
+                        <thead>
+            <tr>
+                <th style="width:50px;"><input type="checkbox" id="selectAll" title="全选"></th>
+                <th>赛事名称</th>
+                <th>举办方</th>
+                <th>级别</th>
+                <th>日期</th>
+                <th>地点</th>
+                <th>奖金</th>
+                <th>冠军</th>
+                <th>MVP</th>
+                <th style="width:90px;">操作</th>
+            </tr>
+            </thead>
+
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+    <!-- 图表 -->
+    <div class="chart-grid">
+        <div class="chart-box">
+            <h4>🏅 MVP 次数排行</h4>
+            <canvas id="mvpChart"></canvas>
+        </div>
+        <div class="chart-box">
+            <h4>💰 各举办方总奖金</h4>
+            <canvas id="orgPrizeChart"></canvas>
+        </div>
+    </div>
+    <div class="footer">CS2 2026 · 数据综合看板 | 暗黑电竞风格 · 所有赛事均为 S级 及以上</div>
+</div>
+
+<div class="modal" id="eventModal">
+        <div class="modal-card" id="modalOverlay">
+            <div class="modal-head">
+                <h2 id="modalTitle">添加比赛</h2>
+                <button type="button" class="modal-close" id="cancelBtn">&times;</button>
+            </div>
+            <form id="eventForm">
+                <input type="hidden" id="eventId">
+                <div class="form-grid">
+                    <div class="form-field full">
+                        <label>赛事名称 *</label>
+                        <input type="text" id="name" required>
+                    </div>
+                    <div class="form-field">
+                        <label>举办方 *</label>
+                        <select id="org" required>
+                        <option value="" disabled selected>请选择主办方</option>
+                        <option value="ESL">ESL</option>
+                        <option value="EWC">EWC</option>
+                        <option value="BLAST">BLAST</option>
+                        <option value="FISSURE">FISSURE</option>
+                        <option value="PGL">PGL</option>
+                        <option value="StarLadder">StarLadder</option>
+                        <option value="完美世界">完美世界</option>
+                        <option value="其他">其他</option>
+                    </select>
+                    </div>
+                    <div class="form-field">
+                        <label>赛事级别 *</label>
+                        <input type="text" id="level" list="levelOptions" required>
+                        <datalist id="levelOptions">
+                            <option value="S级"></option>
+                            <option value="S级(Major)"></option>
+                            <option value="A级"></option>
+                        </datalist>
+                    </div>
+                    <div class="form-field">
+                        <label>开始日期 *</label>
+                        <input type="date" id="start_date" required>
+                    </div>
+                    <div class="form-field">
+                        <label>结束日期 *</label>
+                        <input type="date" id="end_date" required>
+                    </div>
+                    <div class="form-field full">
+                        <label>地点 *</label>
+                        <input type="text" id="location" required>
+                    </div>
+                    <div class="form-field">
+                        <label>总奖金（美元）*</label>
+                        <input type="number" id="prize" min="0" step="1" required>
+                    </div>
+                    <div class="form-field">
+                        <label>比分</label>
+                        <input type="text" id="score" placeholder="例如：3-1">
+                    </div>
+                    <div class="form-field">
+                        <label>冠军</label>
+                        <input type="text" id="champion" placeholder="待定">
+                    </div>
+                    <div class="form-field">
+                        <label>亚军</label>
+                        <input type="text" id="runnerup" placeholder="待定">
+                    </div>
+                    <div class="form-field">
+                        <label>MVP</label>
+                        <input type="text" id="mvp" placeholder="待定">
+                    </div>
+                    <div class="form-field full">
+                        <label>冠军阵容（逗号分隔）</label>
+                        <input type="text" id="champion_roster" placeholder="player1, player2, player3">
+                        <span class="hint">留空表示暂无阵容</span>
+                    </div>
+                    <div class="form-field full">
+                        <label>亚军阵容（逗号分隔）</label>
+                        <input type="text" id="runnerup_roster" placeholder="player1, player2, player3">
+                        <span class="hint">留空表示暂无阵容</span>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn" id="cancelBtn2">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <script>
+    const API_BASE = window.APP_API_BASE || '/api';
+    const READ_ONLY = true;
+    const ORG_OPTIONS = ['ESL', 'EWC', 'BLAST', 'FISSURE', 'PGL', 'StarLadder', '完美世界', '其他'];
+
+    let eventsData = [];
+    let filteredData = [];
+    let timelineOrder = 'asc';
+    let selectedYear = new Date().getFullYear();
+    let lastModified = '--';
+    let deleteMode = false;
+    let selectedIds = new Set();
+    let editingId = null;
+    let mvpChartInstance = null;
+    let orgChartInstance = null;
+
+    const orgFilter = document.getElementById('orgFilter');
+    const levelFilter = document.getElementById('levelFilter');
+    const monthFilter = document.getElementById('monthFilter');
+    const tableBody = document.getElementById('tableBody');
+    const selectAll = document.getElementById('selectAll');
+
+    function formatDate(d) {
+        if (!d) return '';
+        const parts = String(d).split('-');
+        if (parts.length < 3) return String(d);
+        return `${parts[0]}.${parts[1]}.${parts[2]}`;
+    }
+
+    function formatDateRange(e) {
+        if (!e.start_date || !e.end_date) return formatDate(e.date || e.start_date);
+        return `${formatDate(e.start_date)} – ${formatDate(e.end_date)}`;
+    }
+
+    function formatPrize(p) {
+        if (p >= 1000000) return (p / 1000000).toFixed(1) + 'M';
+        if (p >= 1000) return (p / 1000).toFixed(0) + 'K';
+        return p;
+    }
+
+    function isTBD(val) {
+        return val === '待定' || val === 'TBD' || val === null || val === undefined || val === '';
+    }
+
+    async function fetchEvents() {
+        const res = await fetch(`${API_BASE}/api/events`);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        return data.map(e => ({
+            ...e,
+            date: e.start_date,
+            org: ORG_OPTIONS.includes(e.org) ? e.org : '其他'
+        }));
+    }
+
+    async function fetchLastModified() {
+        const res = await fetch(`${API_BASE}/api/settings`);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        return data.last_modified || '--';
+    }
+
+    async function refreshLastModified() {
+        try {
+            lastModified = await fetchLastModified();
+        } catch (e) {
+            lastModified = '--';
+        }
+        const el = document.getElementById('lastModified');
+        if (el) el.textContent = lastModified;
+    }
+
+    async function createEvent(payload) {
+        const res = await fetch(`${API_BASE}/api/events`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error(await res.text());
+        return res.json();
+    }
+
+    async function updateEvent(id, payload) {
+        const res = await fetch(`${API_BASE}/api/events/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error(await res.text());
+        return res.json();
+    }
+
+    async function deleteEvent(id) {
+        const res = await fetch(`${API_BASE}/api/events/${id}`, {
+            method: 'DELETE'
+        });
+        if (res.status !== 204 && res.status !== 200) throw new Error(await res.text());
+    }
+
+    function renderStats(data) {
+        const total = data.length;
+        const totalPrize = data.reduce((sum, e) => sum + Number(e.prize || 0), 0);
+        const finished = data.filter(e => !isTBD(e.champion) && !isTBD(e.mvp));
+        const uniqueMvp = [...new Set(finished.map(e => e.mvp))].filter(m => !isTBD(m));
+        document.getElementById('statsGrid').innerHTML = `
+            <div class="stat-card"><div class="label">🏁 总赛事</div><div class="value">${total}</div></div>
+            <div class="stat-card"><div class="label">💰 总奖金</div><div class="value">$${formatPrize(totalPrize)}</div></div>
+            <div class="stat-card"><div class="label">🏆 已决出冠军</div><div class="value">${finished.length}<span>/ ${total}</span></div></div>
+            <div class="stat-card"><div class="label">⭐ MVP 人数</div><div class="value">${uniqueMvp.length}</div></div>
+        `;
+    }
+
+    function renderMVP(data) {
+        const finished = data.filter(e => !isTBD(e.mvp));
+        const counts = {};
+        finished.forEach(e => {
+            counts[e.mvp] = (counts[e.mvp] || 0) + 1;
+        });
+        const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+        const medals = ['🥇', '🥈', '🥉'];
+        const list = document.getElementById('mvpList');
+        if (sorted.length === 0) {
+            list.innerHTML = '<div class="text-muted" style="padding:12px;">暂无 MVP 数据</div>';
+            return;
+        }
+        list.innerHTML = sorted.map(([name, cnt], idx) => `
+            <div class="mvp-item">
+                <span><span class="medal">${medals[idx] || '🏅'}</span><span class="name">${name}</span></span>
+                <span class="count">${cnt} 次</span>
+            </div>
+        `).join('');
+    }
+
+    function renderTimeline(data) {
+        const sorted = [...data].sort((a, b) => {
+            const da = new Date(a.date);
+            const db = new Date(b.date);
+            return timelineOrder === 'desc' ? db - da : da - db;
+        });
+        const list = document.getElementById('timeline');
+        list.innerHTML = sorted.map(e => {
+            const isMajor = String(e.level || '').includes('Major');
+            return `
+                <div class="tl-item">
+                    <span class="date">${formatDate(e.date)}</span>
+                    <span class="event">${e.name}</span>
+                    <span class="badge ${isMajor ? 'major' : ''}">${e.level}</span>
+                </div>
+            `;
+        }).join('');
+        const titleI = document.querySelector('.panel:nth-child(2) h3 i');
+        if (titleI) titleI.textContent = timelineOrder === 'desc' ? '倒序' : '正序';
+        const toggleBtn = document.getElementById('timelineToggle');
+        if (toggleBtn) toggleBtn.textContent = timelineOrder === 'desc' ? '切换正序' : '切换倒序';
+    }
+
+    function renderChampionTeams(data) {
+        const finished = data.filter(e => !isTBD(e.champion));
+        const teamMap = {};
+        finished.forEach(e => {
+            const team = e.champion;
+            if (!teamMap[team]) teamMap[team] = { count: 0, events: [] };
+            teamMap[team].count++;
+            teamMap[team].events.push({ name: e.name, date: e.date });
+        });
+        const sorted = Object.entries(teamMap)
+            .map(([team, info]) => ({ team, ...info }))
+            .sort((a, b) => b.count - a.count);
+
+        const list = document.getElementById('championList');
+        const expandedTeams = new Set();
+        document.querySelectorAll('.expand-btn-sm').forEach(btn => {
+            if (btn.textContent === '▼') expandedTeams.add(btn.getAttribute('data-team'));
+        });
+        if (sorted.length === 0) {
+            list.innerHTML = '<div class="text-muted" style="padding:12px;">暂无夺冠数据</div>';
+            return;
+        }
+
+        list.innerHTML = sorted.map(item => {
+            const eventItems = item.events.map(ev =>
+                `<li><span class="event-name">${ev.name}</span><span class="event-date">${formatDate(ev.date)}</span></li>`
+            ).join('');
+            const key = item.team.replace(/\s/g, '');
+            return `
+                <div class="champion-item">
+                    <span class="name">${item.team}</span>
+                    <span style="display:flex;align-items:center;gap:6px;">
+                        <span class="count">${item.count}</span>
+                        <button class="expand-btn-sm" data-team="${item.team}">▶</button>
+                    </span>
+                    <ul class="champion-detail" id="detail-${key}">${eventItems}</ul>
+                </div>
+            `;
+        }).join('');
+
+        list.querySelectorAll('.expand-btn-sm').forEach(btn => {
+            const team = btn.getAttribute('data-team');
+            const key = team.replace(/\s/g, '');
+            const detail = document.getElementById('detail-' + key);
+            if (expandedTeams.has(team) && detail) {
+                detail.style.display = 'block';
+                btn.textContent = '▼';
+            }
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                const team = this.getAttribute('data-team');
+                const key = team.replace(/\s/g, '');
+                const detail = document.getElementById('detail-' + key);
+                if (detail) {
+                    const isVisible = detail.style.display !== 'block';
+                    detail.style.display = isVisible ? 'block' : 'none';
+                    this.textContent = isVisible ? '▼' : '▶';
+                }
+            });
+        });
+    }
+
+    function syncSelectionUI() {
+        document.querySelectorAll('.row-checkbox').forEach(cb => {
+            cb.checked = selectedIds.has(Number(cb.dataset.id));
+        });
+        const visibleIds = filteredData.map(e => e.id);
+        selectAll.checked = visibleIds.length > 0 && visibleIds.every(id => selectedIds.has(id));
+    }
+
+    function renderTable(data) {
+        const expandedRows = new Set();
+        tableBody.querySelectorAll('.expand-btn').forEach(btn => {
+            if (btn.textContent === '▼') expandedRows.add(btn.getAttribute('data-id'));
+        });
+        const sortedData = [...data].sort((a, b) => {
+            const da = new Date(a.date);
+            const db = new Date(b.date);
+            return timelineOrder === 'desc' ? db - da : da - db;
+        });
+
+        if (sortedData.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:30px;color:#6a7f9e;">没有匹配的赛事</td></tr>`;
+            syncSelectionUI();
+            return;
+        }
+
+        let html = '';
+        sortedData.forEach(e => {
+            const isMvpTBD = isTBD(e.mvp);
+            const isChampTBD = isTBD(e.champion);
+            const hasDetail = Array.isArray(e.champion_roster) && e.champion_roster.length > 0;
+
+            const checkboxHtml = READ_ONLY ? '' : `<input type="checkbox" class="row-checkbox" data-id="${e.id}">`;
+            html += `
+                <tr class="main-row" data-id="${e.id}">
+                    <td>
+                        <button class="expand-btn" data-id="${e.id}">▶</button>
+                        ${checkboxHtml}
+                    </td>
+                    <td><strong>${e.name}</strong></td>
+                    <td><span class="org-tag">${e.org}</span></td>
+                    <td><span class="level-tag ${String(e.level || '').includes('Major') ? 'major' : ''}">${e.level}</span></td>
+                    <td class="date-range">${formatDateRange(e)}</td>
+                    <td class="location">${e.location || '未知'}</td>
+                    <td class="prize">$${formatPrize(Number(e.prize || 0))}</td>
+                    <td>${isChampTBD ? '<span class="text-muted">待定</span>' : e.champion}</td>
+                    <td><span class="mvp-name ${isMvpTBD ? 'tbd' : ''}">${isMvpTBD ? '待定' : e.mvp}</span></td>
+                    <td class="actions">${READ_ONLY ? '' : `<button class="edit-btn" data-id="${e.id}">编辑</button>`}</td>
+                </tr>
+            `;
+
+            let detailContent = '';
+            if (hasDetail) {
+                const championList = (e.champion_roster || []).join(', ');
+                const runnerupList = (e.runnerup_roster || []).join(', ');
+                const runnerupName = e.runnerup && !isTBD(e.runnerup) ? e.runnerup : '待定';
+                detailContent = `
+                    <div class="detail-content">
+                        <div class="vs-line">
+                            <span class="team-name"><span class="trophy">🏆</span> ${e.champion}</span>
+                            <span class="score">${e.score || '-'}</span>
+                            <span class="team-name">🥈 ${runnerupName}</span>
+                        </div>
+                        <div class="roster-block">
+                            <span class="roster-item"><strong>冠军阵容：</strong>${championList || '暂无'}</span>
+                            <span class="roster-item"><strong>亚军阵容：</strong>${runnerupList || '暂无'}</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                detailContent = `<div class="detail-content"><span class="text-muted">决赛尚未进行或信息暂缺</span></div>`;
+            }
+
+            html += `
+                <tr class="detail-row" data-id="${e.id}" style="display:none;">
+                    <td colspan="10">${detailContent}</td>
+                </tr>
+            `;
+        });
+
+        tableBody.innerHTML = html;
+        syncSelectionUI();
+
+        tableBody.querySelectorAll('.expand-btn').forEach(btn => {
+            const id = btn.getAttribute('data-id');
+            if (expandedRows.has(id)) {
+                btn.textContent = '▼';
+                const detailRow = tableBody.querySelector(`.detail-row[data-id="${id}"]`);
+                if (detailRow) detailRow.style.display = 'table-row';
+            }
+            btn.addEventListener('click', function () {
+                const id = this.getAttribute('data-id');
+                const detailRow = tableBody.querySelector(`.detail-row[data-id="${id}"]`);
+                if (detailRow) {
+                    const isVisible = detailRow.style.display !== 'none';
+                    detailRow.style.display = isVisible ? 'none' : 'table-row';
+                    this.textContent = isVisible ? '▶' : '▼';
+                }
+            });
+        });
+
+        if (!READ_ONLY) {
+            tableBody.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    openEditModal(Number(this.getAttribute('data-id')));
+                });
+            });
+        }
+    }
+
+    function updateCharts(data) {
+        const finished = data.filter(e => !isTBD(e.mvp));
+        const mvpCounts = {};
+        finished.forEach(e => {
+            mvpCounts[e.mvp] = (mvpCounts[e.mvp] || 0) + 1;
+        });
+        const sortedMvp = Object.entries(mvpCounts).sort((a, b) => b[1] - a[1]);
+        const labels = sortedMvp.map(item => item[0]);
+        const values = sortedMvp.map(item => item[1]);
+
+        const ctx1 = document.getElementById('mvpChart').getContext('2d');
+        if (mvpChartInstance) mvpChartInstance.destroy();
+        mvpChartInstance = new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: labels.length ? labels : ['无数据'],
+                datasets: [{
+                    label: 'MVP 次数',
+                    data: labels.length ? values : [0],
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 4,
+                    barPercentage: 0.6,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1, color: '#8896ab' }, grid: { color: '#1a2330' } },
+                    x: { ticks: { color: '#a0b3d0', maxRotation: 30 } }
+                }
+            }
+        });
+
+        const orgPrize = {};
+        data.forEach(e => {
+            orgPrize[e.org] = (orgPrize[e.org] || 0) + Number(e.prize || 0);
+        });
+        const sortedOrg = Object.entries(orgPrize).sort((a, b) => b[1] - a[1]);
+        const orgLabels = sortedOrg.map(item => item[0]);
+        const orgValues = sortedOrg.map(item => item[1] / 1000000);
+
+        const ctx2 = document.getElementById('orgPrizeChart').getContext('2d');
+        if (orgChartInstance) orgChartInstance.destroy();
+        orgChartInstance = new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: orgLabels.length ? orgLabels : ['无数据'],
+                datasets: [{
+                    label: '总奖金 (百万 $)',
+                    data: orgLabels.length ? orgValues : [0],
+                    backgroundColor: '#a78bfa',
+                    borderRadius: 4,
+                    barPercentage: 0.6,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { color: '#8896ab' }, grid: { color: '#1a2330' } },
+                    x: { ticks: { color: '#a0b3d0', maxRotation: 30 } }
+                }
+            }
+        });
+    }
+
+    function renderAll(data) {
+        renderStats(data);
+        renderMVP(data);
+        renderTimeline(data);
+        renderChampionTeams(data);
+        renderTable(data);
+        updateCharts(data);
+    }
+
+    function applyFilters() {
+        const org = orgFilter.value;
+        const level = levelFilter.value;
+        const month = monthFilter.value;
+
+        filteredData = eventsData.filter(e => {
+            const matchOrg = org === 'all' || e.org === org;
+            const matchLevel = level === 'all' || e.level === level;
+            const matchMonth = month === 'all' || (e.date && e.date.startsWith(month));
+            const matchYear = e.date && e.date.startsWith(String(selectedYear));
+            return matchOrg && matchLevel && matchMonth && matchYear;
+        });
+
+        renderAll(filteredData);
+    }
+
+    function populateFilters() {
+        const orgs = ORG_OPTIONS;
+        const levels = [...new Set(eventsData.map(e => e.level))].sort();
+        const months = [...new Set(eventsData.filter(e => e.date && e.date.startsWith(String(selectedYear))).map(e => e.date.substring(0, 7)).filter(Boolean))].sort();
+
+        const currentOrg = orgFilter.value;
+        const currentLevel = levelFilter.value;
+        const currentMonth = monthFilter.value;
+
+        orgFilter.innerHTML = '<option value="all">全部</option>';
+        orgs.forEach(o => {
+            const opt = document.createElement('option');
+            opt.value = o;
+            opt.textContent = o;
+            orgFilter.appendChild(opt);
+        });
+
+        levelFilter.innerHTML = '<option value="all">全部</option>';
+        levels.forEach(l => {
+            const opt = document.createElement('option');
+            opt.value = l;
+            opt.textContent = l;
+            levelFilter.appendChild(opt);
+        });
+
+        monthFilter.innerHTML = '<option value="all">全部月份</option>';
+        months.forEach(m => {
+            const opt = document.createElement('option');
+            opt.value = m;
+            opt.textContent = m;
+            monthFilter.appendChild(opt);
+        });
+
+        orgFilter.value = [...orgFilter.options].some(o => o.value === currentOrg) ? currentOrg : 'all';
+        levelFilter.value = [...levelFilter.options].some(o => o.value === currentLevel) ? currentLevel : 'all';
+        monthFilter.value = [...monthFilter.options].some(o => o.value === currentMonth) ? currentMonth : 'all';
+    }
+
+    function renderYearButtons() {
+        const years = new Set(eventsData.map(e => {
+            if (!e.date) return null;
+            const y = Number(e.date.substring(0, 4));
+            return Number.isFinite(y) ? y : null;
+        }).filter(Boolean));
+        years.add(selectedYear);
+        const sortedYears = [...years].sort((a, b) => a - b);
+        const bar = document.getElementById('yearBar');
+        bar.innerHTML = sortedYears.map(year =>
+            `<button class="year-btn ${year === selectedYear ? 'active' : ''}" data-year="${year}">${year}</button>`
+        ).join('');
+        bar.querySelectorAll('.year-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                selectedYear = Number(this.dataset.year);
+                renderYearButtons();
+                populateFilters();
+                applyFilters();
+            });
+        });
+    }
+
+    function exitDeleteMode() {
+        deleteMode = false;
+        document.body.classList.remove('delete-mode');
+        const btn = document.getElementById('deleteBtn');
+        btn.textContent = '🗑️ 删除比赛';
+        btn.classList.remove('active');
+    }
+
+    function openAddModal() {
+        editingId = null;
+        document.getElementById('modalTitle').textContent = '添加比赛';
+        document.getElementById('eventForm').reset();
+        document.getElementById('eventId').value = '';
+        document.getElementById('eventModal').style.display = 'flex';
+    }
+
+    function openEditModal(id) {
+        const e = eventsData.find(item => item.id === id);
+        if (!e) return;
+        editingId = id;
+        document.getElementById('modalTitle').textContent = '编辑比赛';
+        document.getElementById('eventId').value = e.id;
+        document.getElementById('name').value = e.name || '';
+        document.getElementById('org').value = e.org || '';
+        document.getElementById('level').value = e.level || '';
+        document.getElementById('start_date').value = e.start_date || '';
+        document.getElementById('end_date').value = e.end_date || '';
+        document.getElementById('location').value = e.location || '';
+        document.getElementById('prize').value = e.prize || '';
+        document.getElementById('champion').value = e.champion || '';
+        document.getElementById('runnerup').value = e.runnerup || '';
+        document.getElementById('mvp').value = e.mvp || '';
+        document.getElementById('score').value = e.score || '';
+        document.getElementById('champion_roster').value = (e.champion_roster || []).join(', ');
+        document.getElementById('runnerup_roster').value = (e.runnerup_roster || []).join(', ');
+        document.getElementById('eventModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('eventModal').style.display = 'none';
+        editingId = null;
+    }
+
+    function parseRoster(text) {
+        return text.split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    function parseNullable(text) {
+        const v = text.trim();
+        return v === '' ? null : v;
+    }
+
+    async function submitEvent(e) {
+        e.preventDefault();
+        const payload = {
+            name: document.getElementById('name').value.trim(),
+            org: document.getElementById('org').value.trim(),
+            level: document.getElementById('level').value.trim(),
+            start_date: document.getElementById('start_date').value,
+            end_date: document.getElementById('end_date').value,
+            location: document.getElementById('location').value.trim(),
+            prize: Number(document.getElementById('prize').value),
+            champion: parseNullable(document.getElementById('champion').value),
+            runnerup: parseNullable(document.getElementById('runnerup').value),
+            mvp: parseNullable(document.getElementById('mvp').value),
+            score: parseNullable(document.getElementById('score').value),
+            champion_roster: parseRoster(document.getElementById('champion_roster').value),
+            runnerup_roster: parseRoster(document.getElementById('runnerup_roster').value)
+        };
+
+        if (!payload.name || !payload.org || !payload.level || !payload.start_date || !payload.end_date || !payload.location || Number.isNaN(payload.prize)) {
+            alert('请填写所有必填字段，并确保奖金为数字。');
+            return;
+        }
+
+        try {
+            if (editingId === null) {
+                await createEvent(payload);
+            } else {
+                await updateEvent(editingId, payload);
+            }
+            closeModal();
+            eventsData = await fetchEvents();
+            renderYearButtons();
+            populateFilters();
+            applyFilters();
+            await refreshLastModified();
+        } catch (err) {
+            alert('保存失败：' + err.message);
+        }
+    }
+
+    async function init() {
+        try {
+            eventsData = await fetchEvents();
+            renderYearButtons();
+            populateFilters();
+            applyFilters();
+            await refreshLastModified();
+        } catch (err) {
+            document.getElementById('statsGrid').innerHTML = `
+                <div class="stat-card"><div class="label">⚠️ 连接失败</div><div class="value" style="font-size:16px;">请先启动后端：uvicorn main:app --reload --port 8000</div></div>
+            `;
+            alert('无法连接后端服务：' + err.message);
+        }
+    }
+
+    document.getElementById('addBtn').addEventListener('click', openAddModal);
+    document.getElementById('deleteBtn').addEventListener('click', async function () {
+        if (!deleteMode) {
+            deleteMode = true;
+            document.body.classList.add('delete-mode');
+            this.textContent = '确认删除';
+            this.classList.add('active');
+            renderTable(filteredData);
+            return;
+        }
+
+        if (selectedIds.size === 0) {
+            alert('请至少选择一项');
+            return;
+        }
+
+        const names = [];
+        selectedIds.forEach(id => {
+            const ev = eventsData.find(item => item.id === id);
+            if (ev) names.push(`${ev.name} (ID:${id})`);
+        });
+        if (!confirm(`确认删除以下赛事？\n${names.join('\n')}`)) return;
+
+        try {
+            await Promise.all([...selectedIds].map(id => deleteEvent(id)));
+            eventsData = await fetchEvents();
+            selectedIds.clear();
+            renderYearButtons();
+            populateFilters();
+            exitDeleteMode();
+            applyFilters();
+            await refreshLastModified();
+            alert('删除成功！');
+        } catch (err) {
+            alert('删除失败：' + err.message);
+        }
+    });
+
+    document.getElementById('cancelDeleteBtn').addEventListener('click', function () {
+        selectedIds.clear();
+        exitDeleteMode();
+        renderTable(filteredData);
+    });
+
+    document.getElementById('cancelBtn').addEventListener('click', closeModal);
+    document.getElementById('cancelBtn2').addEventListener('click', closeModal);
+    document.getElementById('eventForm').addEventListener('submit', submitEvent);
+    document.getElementById('eventModal').addEventListener('click', function (e) {
+        if (e.target === this) closeModal();
+    });
+
+    selectAll.addEventListener('change', function () {
+        const visibleIds = filteredData.map(item => item.id);
+        if (this.checked) {
+            visibleIds.forEach(id => selectedIds.add(id));
+        } else {
+            visibleIds.forEach(id => selectedIds.delete(id));
+        }
+        syncSelectionUI();
+    });
+
+    tableBody.addEventListener('change', function (e) {
+        if (e.target.classList.contains('row-checkbox')) {
+            const id = Number(e.target.dataset.id);
+            if (e.target.checked) selectedIds.add(id);
+            else selectedIds.delete(id);
+            syncSelectionUI();
+        }
+    });
+
+    document.getElementById('timelineToggle').addEventListener('click', function () {
+        timelineOrder = timelineOrder === 'desc' ? 'asc' : 'desc';
+        renderAll(filteredData);
+    });
+
+    orgFilter.addEventListener('change', applyFilters);
+    levelFilter.addEventListener('change', applyFilters);
+    monthFilter.addEventListener('change', applyFilters);
+    document.getElementById('resetFilters').addEventListener('click', function () {
+        orgFilter.value = 'all';
+        levelFilter.value = 'all';
+        monthFilter.value = 'all';
+        applyFilters();
+    });
+
+    init();
+
+    if (READ_ONLY) {
+        setInterval(async function () {
+            try {
+                eventsData = await fetchEvents();
+                renderYearButtons();
+                populateFilters();
+                applyFilters();
+                await refreshLastModified();
+            } catch (e) {}
+        }, 5000);
+
+        window.addEventListener('focus', async function () {
+            try {
+                eventsData = await fetchEvents();
+                renderYearButtons();
+                populateFilters();
+                applyFilters();
+                await refreshLastModified();
+            } catch (e) {}
+        });
+    }
+
+
+    </script>
+    </body>
+</html>

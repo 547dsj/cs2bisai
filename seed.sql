@@ -1,0 +1,28 @@
+USE cs2_events;
+
+INSERT INTO events (name, org, level, start_date, end_date, location, prize, champion, runnerup, mvp, score, champion_roster, runnerup_roster) VALUES
+('IEM 克拉科夫 2026', 'ESL', 'S级', '2026-01-28', '2026-02-08', '波兰克拉科夫', 1250000, 'Vitality', 'FURIA', 'ZywOo', '3-1', '["apEX", "ZywOo", "ropz", "mezii", "flameZ"]', '["molodoy", "yuurih", "FalleN", "KSCERATO", "YEKINDAR"]'),
+('EPL 第23赛季', 'ESL', 'S级', '2026-02-27', '2026-03-15', '瑞典斯德哥尔摩', 1000000, 'NAVI', 'Aurora', 'makazze', '3-1', '["iM", "makazze", "b1t", "w0nderful", "Aleksib"]', '["MAJ3R", "XANTARES", "woxic", "Wicadia", "soulfly"]'),
+('IEM 里约 2026', 'ESL', 'S级', '2026-04-13', '2026-04-19', '巴西里约热内卢', 1000000, 'Vitality', 'Spirit', 'ZywOo', '3-0', '["mezii", "apEX", "ropz", "flameZ", "ZywOo"]', '["magixx", "tN1R", "sh1ro", "donk", "zont1x"]'),
+('IEM 亚特兰大 2026', 'ESL', 'S级', '2026-05-11', '2026-05-17', '美国亚特兰大', 1000000, 'NAVI', 'GamerLegion', 'w0nderful', '3-0', '["iM", "makazze", "b1t", "w0nderful", "Aleksib"]', '["Snax", "Tauson", "hypex", "RES", "PR"]'),
+('IEM 科隆Major 2026', 'ESL', 'S级(Major)', '2026-06-02', '2026-06-21', '德国科隆', 1250000, 'Falcons', 'FURIA', 'm0NESY', '3-0', '["karrigan", "NiKo", "m0NESY", "TeSeS", "kyousuke"]', '["molodoy", "yuurih", "FalleN", "KSCERATO", "YEKINDAR"]'),
+('EPL 第24赛季', 'ESL', 'S级', '2026-10-03', '2026-10-11', '波兰卡托维兹', 1000000, '待定', '待定', '待定', '待定', '[]', '[]'),
+('IEM 中国 2026', 'ESL', 'S级', '2026-11-02', '2026-11-08', '中国北京', 1000000, '待定', '待定', '待定', '待定', '[]', '[]'),
+('BLAST 赏金赛 S1', 'BLAST', 'S级', '2026-01-13', '2026-01-25', '丹麦哥本哈根', 1150000, 'PARIVISION', 'Falcons', 'NiKo', '3-0', '["BELCHONOKK", "Jame", "nota", "xiELO", "zweih"]', '["kyousuke", "kyxsan", "m0NESY", "NiKo", "TeSeS"]'),
+('BLAST 公开赛 S1', 'BLAST', 'S级', '2026-03-18', '2026-03-29', '荷兰鹿特丹', 1100000, 'Vitality', 'NAVI', 'ropz', '3-0', '["mezii", "apEX", "ropz", "flameZ", "ZywOo"]', '["iM", "makazze", "b1t", "w0nderful", "Aleksib"]'),
+('BLAST 对抗赛 S1', 'BLAST', 'S级', '2026-04-27', '2026-05-03', '美国沃斯堡', 1000000, 'Vitality', 'NAVI', 'ZywOo', '3-0', '["mezii", "apEX", "ropz", "flameZ", "ZywOo"]', '["iM", "makazze", "b1t", "w0nderful", "Aleksib"]'),
+('BLAST 赏金赛 S2', 'BLAST', 'S级', '2026-07-20', '2026-08-02', '马耳他', 1150000, 'MOUZ', 'Spirit', 'Spinx', '3-1', '["siuhy", "torzsi", "xertioN", "Jimpphat", "Brollan"]', '["magixx", "tN1R", "sh1ro", "donk", "zont1x"]'),
+('BLAST 公开赛 S2', 'BLAST', 'S级', '2026-08-24', '2026-09-06', '哥本哈根(小组赛)&波尔图(淘汰赛)', 1100000, '待定', '待定', '待定', '待定', '[]', '[]'),
+('BLAST 对抗赛 S2', 'BLAST', 'S级', '2026-11-09', '2026-11-15', '中国香港', 1000000, '待定', '待定', '待定', '待定', '[]', '[]'),
+('PGL 克卢日-纳波卡 2026', 'PGL', 'S级', '2026-02-14', '2026-02-22', '罗马尼亚克卢日-纳波卡', 1250000, 'Vitality', 'PARIVISION', 'ZywOo', '3-0', '["apEX", "ZywOo", "flameZ", "mezii", "ropz"]', '["BELCHONOKK", "Jame", "nota", "xiELO", "zweih"]'),
+('PGL 布加勒斯特 2026', 'PGL', 'S级', '2026-04-03', '2026-04-11', '罗马尼亚布加勒斯特', 1250000, 'FUT', 'Astralis', 'cmtry', '3-1', '["dem0n", "lauNX", "Krabeni", "cmtry", "dziugss"]', '["phzy", "HooXi", "jabbi", "Staehr", "ryu"]'),
+('PGL 阿斯塔纳 2026', 'PGL', 'S级', '2026-05-09', '2026-05-17', '哈萨克斯坦阿斯塔纳', 1600000, 'Spirit', 'Falcons', 'donk', '3-0', '["magixx", "tN1R", "sh1ro", "donk", "zont1x"]', '["karrigan", "NiKo", "m0NESY", "TeSeS", "kyousuke"]'),
+('PGL 布加勒斯特大师赛 2026', 'PGL', 'S级', '2026-10-24', '2026-10-31', '罗马尼亚布加勒斯特', 1250000, '待定', '待定', '待定', '待定', '[]', '[]'),
+('PGL 新加坡Major 2026', 'PGL', 'S级(Major)', '2026-11-25', '2026-12-13', '新加坡', 1250000, '待定', '待定', '待定', '待定', '[]', '[]'),
+('CAC 2026', '完美世界', 'S级', '2026-05-20', '2026-05-24', '中国上海', 1000000, 'Legacy', 'Falcons', 'latto', '3-1', '["arT", "dumau", "n1ssim", "latto", "saadzin"]', '["NiKo", "karrigan", "kyousuke", "m0NESY", "TeSeS"]'),
+('裂变天地 S3', 'FISSURE', 'S级', '2026-09-08', '2026-09-13', '中国苏州', 1250000, '待定', '待定', '待定', '待定', '[]', '[]'),
+('Esports World Cup 2026', 'EWC', 'S级', '2026-08-12', '2026-08-23', '法国巴黎', 2000000, 'Spirit', 'FUT', 'donk', '3-1', '["magixx", "tN1R", "sh1ro", "donk", "zont1x"]', '["dem0n", "lauNX", "Krabeni", "cmtry", "dziugss"]'),
+('StarSeries S20', 'StarLadder', 'S级', '2026-09-17', '2026-09-20', '申根区', 500000, '待定', '待定', '待定', '待定', '[]', '[]'),
+('XPL 广州 2026', '其他', 'S级', '2026-07-01', '2026-07-12', '中国广州', 1000000, '9z', 'PARIVISION', 'HUASOPEEK', '3-0', '["dgt", "HUASOPEEK", "luchov", "max", "meyern"]', '["BELCHONOKK", "Jame", "nota", "xiELO", "zweih"]'),
+('Thunderpick 世界锦标赛 2026', '其他', 'S级', '2026-10-14', '2026-10-18', '马耳他', 500000, '待定', '待定', '待定', '待定', '[]', '[]'),
+('ACL 2026', '其他', 'S级', '2026-05-11', '2026-05-17', '中国上海', 150000, 'LVG', 'JiJieHao', 'z4kr', '3-1', '["Starry", "EmiliaQAQ", "C4LLM3SU3", "z4KR", "Westmelon"]', '["CacaNito", "sinnopsyy", "Bibu", "m1N1", "0SAMAS"]');
