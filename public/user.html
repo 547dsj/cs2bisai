@@ -410,22 +410,13 @@
             box-shadow: 0 0 22px rgba(91, 200, 255, 0.25);
             transform: translateY(-2px);
         }
-        .quote-dots { display: flex; align-items: center; gap: 9px; }
-        .quote-dot {
-            width: 8px;
-            height: 8px;
-            padding: 0;
-            border: none;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.18);
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .quote-dot:hover { background: rgba(255, 255, 255, 0.4); }
-        .quote-dot.active {
-            width: 24px;
-            border-radius: 99px;
-            background: linear-gradient(90deg, var(--cyan), var(--violet));
+        .quote-count {
+            font-family: var(--font-display);
+            font-size: 11px;
+            letter-spacing: 0.24em;
+            text-transform: uppercase;
+            color: var(--text-faint);
+            white-space: nowrap;
         }
         .scroll-hint {
             position: absolute;
@@ -1405,7 +1396,7 @@
         </div>
         <div class="quote-controls">
             <button type="button" class="quote-arrow" id="quotePrev" aria-label="上一条语录">‹</button>
-            <div class="quote-dots" id="quoteDots"></div>
+            <div class="quote-count" id="quoteCount"></div>
             <button type="button" class="quote-arrow" id="quoteNext" aria-label="下一条语录">›</button>
         </div>
     </div>
@@ -2296,7 +2287,7 @@
     }
 
     /* ================= 首页大屏：语录轮播 / 视频+粒子背景 / 下滑翻页 ================= */
-    const heroQuotes = [
+    const DEFAULT_QUOTES = [
         { zh: '我愿意用所有 MVP 奖牌，换一座 Major 冠军奖杯。', en: "I'd trade all my MVP medals for one Major trophy.", src: 'NiKo · G2', type: 'player' },
         { zh: '"Are you kidding me?!" —— 那是 CS 史上最经典的解说瞬间。', en: '"Are you kidding me?!" — an all-time caster moment.', src: 'Anders Blume · 解说', type: 'caster' },
         { zh: 'Born to Win —— 天生要赢。', en: 'Born to Win.', src: 'NAVI 官方口号', type: 'official' },
@@ -2313,7 +2304,7 @@
     const quoteText = document.getElementById('quoteText');
     const quoteEn = document.getElementById('quoteEn');
     const quoteSource = document.getElementById('quoteSource');
-    const quoteDots = document.getElementById('quoteDots');
+    const quoteCount = document.getElementById('quoteCount');
     const quoteProgress = document.getElementById('quoteProgress');
     const quotePrevBtn = document.getElementById('quotePrev');
     const quoteNextBtn = document.getElementById('quoteNext');
@@ -2325,49 +2316,85 @@
     const dataParticles = document.getElementById('dataParticles');
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    let quoteIndex = 0;
+    let quotePool = [];
+    let currentQuote = null;
+    let prevStack = [];
     let quoteTimer = null;
 
-    heroQuotes.forEach(function (q, i) {
-        const dot = document.createElement('button');
-        dot.type = 'button';
-        dot.className = 'quote-dot' + (i === 0 ? ' active' : '');
-        dot.setAttribute('aria-label', '查看第 ' + (i + 1) + ' 条语录');
-        dot.addEventListener('click', function () { showQuote(i); startQuoteTimer(); });
-        quoteDots.appendChild(dot);
-    });
+    function randomQuote() {
+        if (!quotePool.length) return null;
+        if (quotePool.length === 1) return quotePool[0];
+        let q = currentQuote;
+        let guard = 0;
+        while (q === currentQuote && guard < 16) {
+            q = quotePool[Math.floor(Math.random() * quotePool.length)];
+            guard++;
+        }
+        return q;
+    }
 
-    function showQuote(index, instant) {
-        quoteIndex = (index + heroQuotes.length) % heroQuotes.length;
-        const q = heroQuotes[quoteIndex];
+    function displayQuote(q, instant) {
+        if (!q) return;
+        currentQuote = q;
         quoteText.classList.add('fade-out');
         setTimeout(function () {
             quoteText.textContent = q.zh;
-            quoteEn.textContent = q.en;
-            quoteSource.textContent = '— ' + q.src;
-            quoteSource.className = 'quote-source type-' + q.type;
+            quoteEn.textContent = q.en || '';
+            quoteSource.textContent = q.src ? '— ' + q.src : '';
+            quoteSource.className = 'quote-source type-' + (q.type || 'community');
             quoteText.classList.remove('fade-out');
         }, instant ? 0 : 170);
-        Array.prototype.forEach.call(quoteDots.children, function (dot, i) {
-            dot.classList.toggle('active', i === quoteIndex);
-        });
         quoteProgress.classList.remove('run');
         void quoteProgress.offsetWidth;
         quoteProgress.classList.add('run');
     }
 
+    function nextQuote() {
+        if (currentQuote) prevStack.push(currentQuote);
+        if (prevStack.length > 100) prevStack.shift();
+        displayQuote(randomQuote() || currentQuote);
+        startQuoteTimer();
+    }
+
+    function prevQuote() {
+        const target = prevStack.length ? prevStack.pop() : (randomQuote() || currentQuote);
+        displayQuote(target);
+        startQuoteTimer();
+    }
+
     function startQuoteTimer() {
         if (quoteTimer) clearTimeout(quoteTimer);
         if (!reduceMotion) {
-            quoteTimer = setTimeout(function () {
-                showQuote(quoteIndex + 1);
-                startQuoteTimer();
-            }, 7000);
+            quoteTimer = setTimeout(nextQuote, 7000);
         }
     }
 
-    quotePrevBtn.addEventListener('click', function () { showQuote(quoteIndex - 1); startQuoteTimer(); });
-    quoteNextBtn.addEventListener('click', function () { showQuote(quoteIndex + 1); startQuoteTimer(); });
+    async function loadQuotes() {
+        let pool = [];
+        try {
+            const res = await fetch(`${API_BASE}/api/quotes`);
+            if (res.ok) {
+                const data = await res.json();
+                if (Array.isArray(data) && data.length) {
+                    pool = data.map(function (q) {
+                        return {
+                            zh: String(q.zh || '').trim(),
+                            en: String(q.en || '').trim(),
+                            src: String(q.src || '').trim(),
+                            type: q.type || 'community'
+                        };
+                    }).filter(function (q) { return q.zh; });
+                }
+            }
+        } catch (e) {}
+        quotePool = pool.length ? pool : DEFAULT_QUOTES;
+        quoteCount.textContent = quotePool.length ? ('语录库 · ' + quotePool.length + ' 条') : '';
+        displayQuote(randomQuote(), true);
+        startQuoteTimer();
+    }
+
+    quotePrevBtn.addEventListener('click', prevQuote);
+    quoteNextBtn.addEventListener('click', nextQuote);
 
     if (window.matchMedia('(hover: hover)').matches) {
         quoteStage.addEventListener('mouseenter', function () {
@@ -2390,16 +2417,16 @@
         const dx = e.changedTouches[0].clientX - touchStartX;
         const dy = e.changedTouches[0].clientY - touchStartY;
         if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy)) {
-            showQuote(quoteIndex + (dx < 0 ? 1 : -1));
-            startQuoteTimer();
+            if (dx < 0) nextQuote();
+            else prevQuote();
         }
     }, { passive: true });
 
     document.addEventListener('keydown', function (e) {
         const tag = document.activeElement ? document.activeElement.tagName : '';
         if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-        if (e.key === 'ArrowRight') { showQuote(quoteIndex + 1); startQuoteTimer(); }
-        if (e.key === 'ArrowLeft') { showQuote(quoteIndex - 1); startQuoteTimer(); }
+        if (e.key === 'ArrowRight') nextQuote();
+        if (e.key === 'ArrowLeft') prevQuote();
     });
 
     scrollHint.addEventListener('click', function () {
@@ -2600,8 +2627,7 @@
         }, 200);
     });
 
-    showQuote(0, true);
-    startQuoteTimer();
+    loadQuotes();
 
 
     </script>

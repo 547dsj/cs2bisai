@@ -4,3 +4,7 @@
 /cs2bisai/ /user 200
 /cs2bisai/admin /admin 200
 /cs2bisai/admin/ /admin 200
+/admin/quotes /admin-quotes 200
+/admin/quotes/ /admin-quotes 200
+/cs2bisai/admin/quotes /admin-quotes 200
+/cs2bisai/admin/quotes/ /admin-quotes 200

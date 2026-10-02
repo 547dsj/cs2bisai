@@ -73,8 +73,39 @@ function event(row) {
   try { b = JSON.parse(row.runnerup_roster || '[]'); } catch {}
   return { id: row.id, name: row.name, org: row.org, level: row.level, start_date: row.start_date, end_date: row.end_date, location: row.location, prize: row.prize, champion: row.champion, runnerup: row.runnerup, mvp: row.mvp, score: row.score, champion_roster: a, runnerup_roster: b };
 }
+function quoteRow(row) {
+  if (!row) return null;
+  return { id: row.id, zh: row.text_zh, en: row.text_en || '', src: row.source || '', type: row.type || 'community', sort_order: row.sort_order };
+}
 async function adminOnly(req, env) {
   if (!(await sessionOk(req, env.SESSION_SECRET || 'dev-secret'))) throw { status: 401, detail: '请先登录' };
+}
+async function ensureQuotes(env) {
+  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS quotes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    text_zh TEXT NOT NULL,
+    text_en TEXT NOT NULL DEFAULT '',
+    source TEXT NOT NULL DEFAULT '',
+    type TEXT NOT NULL DEFAULT 'community',
+    sort_order INTEGER NOT NULL DEFAULT 0
+  )`).run();
+  const r = await env.DB.prepare('SELECT COUNT(*) AS c FROM quotes').first();
+  if (r && Number(r.c) > 0) return;
+  const seed = [
+    ['我愿意用所有 MVP 奖牌，换一座 Major 冠军奖杯。', "I'd trade all my MVP medals for one Major trophy.", 'NiKo · G2', 'player', 1],
+    ['"Are you kidding me?!" —— 那是 CS 史上最经典的解说瞬间。', '"Are you kidding me?!" — an all-time caster moment.', 'Anders Blume · 解说', 'caster', 2],
+    ['Born to Win —— 天生要赢。', 'Born to Win.', 'NAVI 官方口号', 'official', 3],
+    ['V for Victory —— 为胜利而生。', 'V for Victory.', 'Vitality 官方口号', 'official', 4],
+    ['年龄只是数字，热爱才是引擎。', 'Age is just a number — passion is the engine.', 'karrigan · FaZe（大意）', 'player', 5],
+    ['Rush B 不需要理由。', 'Rush B needs no reason.', '社区语录', 'community', 6],
+    ['五个人的游戏，缺一不可。', 'A five-man game — everyone counts.', '社区语录', 'community', 7],
+    ['ECO 局，也要打出长枪局的气势。', 'Play an eco like a full buy.', '社区语录', 'community', 8],
+    ['坚持到最后一秒，奇迹才会上演。', 'Miracles happen in the final second.', '社区语录', 'community', 9],
+    ['一座 Major，一条走了十年的路。', 'One Major — a decade-long road.', '社区语录', 'community', 10]
+  ];
+  for (const q of seed) {
+    await env.DB.prepare('INSERT INTO quotes(text_zh,text_en,source,type,sort_order) VALUES(?,?,?,?,?)').bind(q[0], q[1], q[2], q[3], q[4]).run();
+  }
 }
 export async function onRequest(ctx) {
   const req = ctx.request, env = ctx.env;
@@ -130,6 +161,50 @@ export async function onRequest(ctx) {
         await touch(env);
         const r = await env.DB.prepare('SELECT * FROM events WHERE id=?').bind(id).first();
         return r ? json(event(r)) : json({ detail: '赛事不存在' }, 404);
+      }
+    }
+    if (p[0] === 'quotes') {
+      await ensureQuotes(env);
+      if (req.method === 'GET' && p.length === 1) {
+        const { results } = await env.DB.prepare('SELECT * FROM quotes ORDER BY sort_order ASC, id ASC').all();
+        return json(results.map(quoteRow));
+      }
+      await adminOnly(req, env);
+      if (req.method === 'POST' && p.length === 1) {
+        const b = await req.json().catch(() => ({}));
+        const zh = String(b.zh || '').trim();
+        if (!zh) return json({ detail: '语录内容不能为空' }, 400);
+        const sortRaw = b.sort_order;
+        let sort = Number(sortRaw);
+        if (sortRaw === null || sortRaw === undefined || sortRaw === '' || !Number.isFinite(sort)) {
+          const r = await env.DB.prepare('SELECT COALESCE(MAX(sort_order),0) AS m FROM quotes').first();
+          sort = (r ? Number(r.m) : 0) + 1;
+        }
+        const info = await env.DB.prepare('INSERT INTO quotes(text_zh,text_en,source,type,sort_order) VALUES(?,?,?,?,?)').bind(zh, String(b.en || '').trim(), String(b.src || '').trim(), String(b.type || 'community'), sort).run();
+        await touch(env);
+        const r = await env.DB.prepare('SELECT * FROM quotes WHERE id=?').bind(info.meta.last_row_id).first();
+        return json(quoteRow(r), 201);
+      }
+      if (p.length === 2 && (req.method === 'PUT' || req.method === 'DELETE')) {
+        const id = Number(p[1]);
+        if (req.method === 'DELETE') {
+          await env.DB.prepare('DELETE FROM quotes WHERE id=?').bind(id).run();
+          await touch(env);
+          return new Response(null, { status: 204 });
+        }
+        const b = await req.json().catch(() => ({}));
+        const zh = String(b.zh || '').trim();
+        if (!zh) return json({ detail: '语录内容不能为空' }, 400);
+        const sortRaw = b.sort_order;
+        let sort = (sortRaw === null || sortRaw === undefined || sortRaw === '') ? null : Number(sortRaw);
+        if (sort === null) {
+          const r = await env.DB.prepare('SELECT COALESCE(MAX(sort_order),0) AS m FROM quotes').first();
+          sort = (r ? Number(r.m) : 0) + 1;
+        }
+        await env.DB.prepare('UPDATE quotes SET text_zh=?,text_en=?,source=?,type=?,sort_order=? WHERE id=?').bind(zh, String(b.en || '').trim(), String(b.src || '').trim(), String(b.type || 'community'), sort, id).run();
+        await touch(env);
+        const r = await env.DB.prepare('SELECT * FROM quotes WHERE id=?').bind(id).first();
+        return r ? json(quoteRow(r)) : json({ detail: '语录不存在' }, 404);
       }
     }
     return json({ detail: '接口不存在' }, 404);

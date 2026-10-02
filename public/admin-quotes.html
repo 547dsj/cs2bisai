@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700&family=Orbitron:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <title>开头语录管理 · CS2 赛事全景</title>
+    <script src="/static/config.js"></script>
+    <style>
+        :root {
+            --bg: #05060c;
+            --glass: rgba(255, 255, 255, 0.035);
+            --glass-strong: rgba(255, 255, 255, 0.07);
+            --stroke: rgba(255, 255, 255, 0.10);
+            --stroke-soft: rgba(255, 255, 255, 0.06);
+            --text: #e9eff8;
+            --text-dim: #9aa6bb;
+            --text-faint: #6b7690;
+            --cyan: #5bc8ff;
+            --violet: #8f6bff;
+            --amber: #f2c879;
+            --rose: #ff5d73;
+            --radius-lg: 22px;
+            --radius-md: 16px;
+            --font-display: 'Orbitron', 'Segoe UI', sans-serif;
+            --font-body: 'Exo 2', 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;
+            --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-body); }
+        html { scroll-behavior: smooth; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            color-scheme: dark;
+            min-height: 100vh;
+            padding: 28px 20px 48px;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+        .bg-scene { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+        .bg-scene .aura { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.55; animation: aura-drift 26s ease-in-out infinite alternate; }
+        .bg-scene .aura-a { width: 640px; height: 640px; left: -220px; top: -240px; background: radial-gradient(circle, rgba(43, 132, 196, 0.20), transparent 62%); }
+        .bg-scene .aura-b { width: 720px; height: 720px; right: -260px; top: 16%; background: radial-gradient(circle, rgba(116, 78, 255, 0.16), transparent 62%); animation-delay: -9s; }
+        .bg-scene .aura-c { width: 520px; height: 520px; left: 22%; bottom: -260px; background: radial-gradient(circle, rgba(242, 200, 121, 0.08), transparent 62%); animation-delay: -16s; }
+        .bg-scene .grid {
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.028) 1px, transparent 1px);
+            background-size: 56px 56px;
+            mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 20%, transparent 75%);
+            -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 20%, transparent 75%);
+        }
+        @keyframes aura-drift {
+            from { transform: translate3d(0, 0, 0) scale(1); }
+            to { transform: translate3d(40px, 28px, 0) scale(1.08); }
+        }
+        ::selection { background: rgba(91, 200, 255, 0.28); color: #fff; }
+        :focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; border-radius: 4px; }
+
+        .container { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; }
+
+        .main-header {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 18px;
+            padding: 34px 40px 30px;
+            margin-bottom: 26px;
+            background: linear-gradient(160deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.015) 55%, rgba(91, 200, 255, 0.04));
+            border: 1px solid var(--stroke);
+            border-radius: var(--radius-lg);
+            backdrop-filter: blur(18px) saturate(1.25);
+            -webkit-backdrop-filter: blur(18px) saturate(1.25);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+            animation: rise-in 0.7s var(--ease-out) both;
+        }
+        .main-header::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(91, 200, 255, 0.7), rgba(143, 107, 255, 0.5), transparent);
+        }
+        .hero-kicker {
+            font-family: var(--font-display);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.42em;
+            text-transform: uppercase;
+            color: var(--cyan);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .hero-kicker::before { content: ''; width: 34px; height: 1px; background: linear-gradient(90deg, var(--cyan), transparent); }
+        .main-header h1 {
+            font-family: var(--font-display);
+            font-size: clamp(26px, 4vw, 38px);
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            color: #f4f8ff;
+            text-transform: uppercase;
+        }
+        .main-header .sub {
+            margin-top: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            letter-spacing: 0.06em;
+            color: var(--text-dim);
+        }
+        .head-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+        .btn {
+            min-height: 44px;
+            padding: 10px 22px;
+            border: 1px solid var(--stroke);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-dim);
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 14px;
+            letter-spacing: 0.06em;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            transition: all 0.22s var(--ease-out);
+        }
+        .btn:hover { color: #fff; border-color: rgba(91, 200, 255, 0.55); transform: translateY(-2px); box-shadow: 0 10px 26px rgba(0, 0, 0, 0.4); }
+        .btn-primary { color: #04121c; background: linear-gradient(135deg, #7ed8ff, var(--cyan)); border-color: transparent; font-weight: 600; box-shadow: 0 10px 30px rgba(91, 200, 255, 0.3); }
+        .btn-primary:hover { color: #04121c; box-shadow: 0 14px 36px rgba(91, 200, 255, 0.45); }
+        .btn-danger { background: transparent; border-color: rgba(255, 93, 115, 0.5); color: #ff9fae; }
+        .btn-danger:hover { color: #fff; border-color: var(--rose); box-shadow: 0 10px 28px rgba(255, 93, 115, 0.25); }
+        .btn-sm { min-height: 32px; padding: 5px 14px; font-size: 13px; }
+
+        .table-wrap {
+            background: linear-gradient(170deg, var(--glass-strong), var(--glass));
+            border: 1px solid var(--stroke);
+            border-radius: var(--radius-lg);
+            overflow-x: auto;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 26px 70px rgba(0, 0, 0, 0.45);
+            animation: rise-in 0.7s var(--ease-out) 0.08s both;
+        }
+        table { width: 100%; border-collapse: collapse; min-width: 860px; }
+        th {
+            text-align: left;
+            padding: 16px 18px;
+            font-family: var(--font-display);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--text-faint);
+            border-bottom: 1px solid var(--stroke-soft);
+            white-space: nowrap;
+        }
+        td {
+            padding: 14px 18px;
+            font-size: 14px;
+            color: var(--text);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            vertical-align: top;
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: rgba(255, 255, 255, 0.02); }
+        td.quote-zh { max-width: 380px; line-height: 1.55; }
+        td.quote-en { color: var(--text-dim); max-width: 320px; font-size: 13px; }
+        .type-chip {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            letter-spacing: 0.08em;
+            border: 1px solid var(--stroke);
+            color: var(--text-dim);
+            white-space: nowrap;
+        }
+        .type-chip.player { color: var(--cyan); border-color: rgba(91, 200, 255, 0.4); }
+        .type-chip.caster { color: #b79cff; border-color: rgba(143, 107, 255, 0.4); }
+        .type-chip.official { color: var(--amber); border-color: rgba(242, 200, 121, 0.4); }
+        .row-actions { display: flex; gap: 8px; white-space: nowrap; }
+        .tip {
+            margin-top: 18px;
+            font-size: 13px;
+            color: var(--text-faint);
+            letter-spacing: 0.03em;
+            text-align: center;
+            animation: rise-in 0.7s var(--ease-out) 0.16s both;
+        }
+        @keyframes rise-in {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: none; }
+        }
+
+        /* ---------- login ---------- */
+        .login-overlay {
+            position: fixed; inset: 0; z-index: 50;
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+            background: rgba(5, 6, 12, 0.82);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+        }
+        .login-overlay.hidden { display: none; }
+        .login-card {
+            width: 100%; max-width: 380px;
+            padding: 36px 32px 30px;
+            background: linear-gradient(165deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+            border: 1px solid var(--stroke);
+            border-radius: var(--radius-lg);
+            text-align: center;
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6);
+        }
+        .login-mark {
+            width: 54px; height: 54px;
+            margin: 0 auto 16px;
+            display: flex; align-items: center; justify-content: center;
+            border: 1px solid rgba(91, 200, 255, 0.35);
+            border-radius: 16px;
+            background: rgba(91, 200, 255, 0.08);
+        }
+        .login-mark svg { width: 26px; height: 26px; stroke: var(--cyan); }
+        .login-kicker {
+            font-family: var(--font-display);
+            font-size: 10px;
+            letter-spacing: 0.4em;
+            color: var(--text-faint);
+            margin-bottom: 8px;
+        }
+        .login-card h2 { font-family: var(--font-display); font-size: 20px; letter-spacing: 0.08em; color: #f4f8ff; margin-bottom: 22px; }
+        .login-card input {
+            width: 100%;
+            padding: 13px 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--stroke);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 15px;
+            letter-spacing: 0.12em;
+            outline: none;
+            text-align: center;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .login-card input:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(91, 200, 255, 0.14); }
+        .login-error { color: #ff9fae; font-size: 13px; min-height: 20px; margin: 12px 0 4px; }
+        .login-card .btn { width: 100%; margin-top: 8px; }
+        .login-back {
+            margin-top: 16px;
+            background: none;
+            border: none;
+            color: var(--text-faint);
+            cursor: pointer;
+            font-size: 13px;
+            letter-spacing: 0.06em;
+        }
+        .login-back:hover { color: var(--cyan); }
+
+        /* ---------- modal ---------- */
+        .modal {
+            position: fixed; inset: 0; z-index: 60;
+            display: none;
+            align-items: center; justify-content: center;
+            padding: 20px;
+            background: rgba(5, 6, 12, 0.72);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .modal.open { display: flex; }
+        .modal-card {
+            width: 100%; max-width: 640px;
+            max-height: 90vh;
+            overflow-y: auto;
+            background: linear-gradient(165deg, #101522, #0a0d17);
+            border: 1px solid var(--stroke);
+            border-radius: var(--radius-lg);
+            padding: 26px 28px;
+            box-shadow: 0 50px 120px rgba(0, 0, 0, 0.65);
+        }
+        .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-head h2 { font-family: var(--font-display); font-size: 18px; letter-spacing: 0.08em; color: #f4f8ff; }
+        .modal-close {
+            width: 34px; height: 34px;
+            background: none;
+            border: 1px solid var(--stroke);
+            border-radius: 50%;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+        }
+        .modal-close:hover { color: #fff; border-color: var(--cyan); }
+        .form-field { margin-bottom: 16px; }
+        .form-field label { display: block; font-size: 13px; color: var(--text-dim); letter-spacing: 0.05em; margin-bottom: 8px; }
+        .form-field input, .form-field textarea, .form-field select {
+            width: 100%;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--stroke);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+        .form-field textarea { resize: vertical; min-height: 74px; line-height: 1.6; }
+        .form-field input:focus, .form-field textarea:focus, .form-field select:focus { border-color: var(--cyan); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }
+
+        @media (max-width: 640px) {
+            body { padding: 16px 12px 32px; }
+            .main-header { padding: 26px 20px 22px; border-radius: 20px; }
+            .head-actions { width: 100%; }
+            .head-actions .btn { flex: 1; }
+            .form-row { grid-template-columns: 1fr; }
+            .modal-card { padding: 22px 18px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.001s !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.001s !important;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="bg-scene" aria-hidden="true">
+    <div class="aura aura-a"></div>
+    <div class="aura aura-b"></div>
+    <div class="aura aura-c"></div>
+    <div class="grid"></div>
+</div>
+
+<div class="login-overlay" id="loginOverlay">
+    <div class="login-card">
+        <div class="login-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg></div>
+        <div class="login-kicker">Restricted Area</div>
+        <h2>管理员登录</h2>
+        <input type="password" id="loginPassword" placeholder="输入访问密码" autocomplete="current-password">
+        <div class="login-error" id="loginError"></div>
+        <button type="button" class="btn btn-primary" id="loginBtn">进入语录管理</button>
+        <button type="button" class="login-back" id="loginBackBtn">← 返回管理员主页</button>
+    </div>
+</div>
+
+<div class="container">
+    <header class="main-header">
+        <div>
+            <div class="hero-kicker">Quote Manager</div>
+            <h1>开头语录管理</h1>
+            <div class="sub">用户页首屏随机轮播语录 · 每 7 秒自动切换 · 修改后立即生效</div>
+        </div>
+        <div class="head-actions">
+            <button type="button" class="btn" id="backBtn">← 返回管理员主页</button>
+            <button type="button" class="btn btn-primary" id="addQuoteBtn">＋ 添加语录</button>
+        </div>
+    </header>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+            <tr>
+                <th style="width:60px;">ID</th>
+                <th>语录内容（中文）</th>
+                <th>英文翻译</th>
+                <th>署名</th>
+                <th style="width:90px;">类型</th>
+                <th style="width:70px;">排序</th>
+                <th style="width:150px;">操作</th>
+            </tr>
+            </thead>
+            <tbody id="quoteTableBody"></tbody>
+        </table>
+    </div>
+    <div class="tip" id="quoteTip">语录库为空</div>
+</div>
+
+<div class="modal" id="quoteModal">
+    <div class="modal-card">
+        <div class="modal-head">
+            <h2 id="modalTitle">添加语录</h2>
+            <button type="button" class="modal-close" id="modalClose">&times;</button>
+        </div>
+        <form id="quoteForm">
+            <input type="hidden" id="quoteId">
+            <div class="form-field">
+                <label>语录内容（中文）*</label>
+                <textarea id="qZh" required placeholder="展示在用户页首屏的语录，支持选手名场面、解说金句、官方口号、社区语录等"></textarea>
+            </div>
+            <div class="form-field">
+                <label>英文翻译（可选，展示在中文下方）</label>
+                <input type="text" id="qEn" placeholder="例如：Born to Win.">
+            </div>
+            <div class="form-row">
+                <div class="form-field">
+                    <label>署名（如 NiKo · G2 / 解说 / 官方 / 社区语录）</label>
+                    <input type="text" id="qSrc" placeholder="留空则不显示署名">
+                </div>
+                <div class="form-field">
+                    <label>类型（决定署名颜色）</label>
+                    <select id="qType">
+                        <option value="player">选手</option>
+                        <option value="caster">解说</option>
+                        <option value="official">官方</option>
+                        <option value="community">社区</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-field">
+                <label>排序（数字越小越靠前，仅影响本管理列表顺序，用户页为随机展示）</label>
+                <input type="number" id="qSort" min="0" step="1" placeholder="留空自动排到最后">
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn" id="formCancel">取消</button>
+                <button type="submit" class="btn btn-primary">保存</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const API_BASE = window.APP_API_BASE || '';
+    const TYPE_LABELS = { player: '选手', caster: '解说', official: '官方', community: '社区' };
+
+    const loginOverlay = document.getElementById('loginOverlay');
+    const quoteTableBody = document.getElementById('quoteTableBody');
+    const quoteTip = document.getElementById('quoteTip');
+    const quoteModal = document.getElementById('quoteModal');
+    const quoteForm = document.getElementById('quoteForm');
+    const modalTitle = document.getElementById('modalTitle');
+    const quoteId = document.getElementById('quoteId');
+    const qZh = document.getElementById('qZh');
+    const qEn = document.getElementById('qEn');
+    const qSrc = document.getElementById('qSrc');
+    const qType = document.getElementById('qType');
+    const qSort = document.getElementById('qSort');
+    let quotesData = [];
+    let ready = false;
+
+    async function api(path, options) {
+        const res = await fetch(`${API_BASE}${path}`, Object.assign({ credentials: 'include', headers: { 'Content-Type': 'application/json' } }, options || {}));
+        if (res.status === 401) {
+            loginOverlay.classList.remove('hidden');
+            throw new Error('请先登录');
+        }
+        return res;
+    }
+
+    function escapeHtml(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function renderQuotes() {
+        quoteTableBody.innerHTML = quotesData.map(function (q) {
+            const type = q.type || 'community';
+            return '<tr>' +
+                '<td>' + q.id + '</td>' +
+                '<td class="quote-zh">' + escapeHtml(q.zh) + '</td>' +
+                '<td class="quote-en">' + escapeHtml(q.en || '—') + '</td>' +
+                '<td>' + escapeHtml(q.src || '—') + '</td>' +
+                '<td><span class="type-chip ' + escapeHtml(type) + '">' + (TYPE_LABELS[type] || type) + '</span></td>' +
+                '<td>' + q.sort_order + '</td>' +
+                '<td><div class="row-actions">' +
+                '<button type="button" class="btn btn-sm" data-edit="' + q.id + '">编辑</button>' +
+                '<button type="button" class="btn btn-sm btn-danger" data-del="' + q.id + '">删除</button>' +
+                '</div></td>' +
+                '</tr>';
+        }).join('');
+        quoteTip.textContent = quotesData.length ? ('共 ' + quotesData.length + ' 条语录 · 用户页从中随机抽取') : '语录库为空，用户页将使用内置默认语录';
+    }
+
+    async function loadQuotes() {
+        const res = await api('/api/quotes');
+        if (res.ok) quotesData = await res.json();
+        renderQuotes();
+    }
+
+    function openModal(q) {
+        quoteForm.reset();
+        if (q) {
+            modalTitle.textContent = '编辑语录';
+            quoteId.value = q.id;
+            qZh.value = q.zh || '';
+            qEn.value = q.en || '';
+            qSrc.value = q.src || '';
+            qType.value = q.type || 'community';
+            qSort.value = q.sort_order;
+        } else {
+            modalTitle.textContent = '添加语录';
+            quoteId.value = '';
+            qType.value = 'community';
+        }
+        quoteModal.classList.add('open');
+    }
+
+    function closeModal() { quoteModal.classList.remove('open'); }
+
+    quoteTableBody.addEventListener('click', async function (e) {
+        const editBtn = e.target.closest('[data-edit]');
+        const delBtn = e.target.closest('[data-del]');
+        if (editBtn) {
+            const id = Number(editBtn.getAttribute('data-edit'));
+            const q = quotesData.find(function (x) { return x.id === id; });
+            if (q) openModal(q);
+            return;
+        }
+        if (delBtn) {
+            const id = Number(delBtn.getAttribute('data-del'));
+            if (!confirm('确定删除这条语录吗？删除后立即从用户页语录库移除。')) return;
+            try {
+                const res = await api('/api/quotes/' + id, { method: 'DELETE' });
+                if (res.ok || res.status === 204) await loadQuotes();
+                else alert('删除失败，请重试');
+            } catch (err) {
+                if (err.message !== '请先登录') alert('网络错误，请重试');
+            }
+        }
+    });
+
+    quoteForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const zh = qZh.value.trim();
+        if (!zh) { alert('语录内容不能为空'); return; }
+        const body = {
+            zh: zh,
+            en: qEn.value.trim(),
+            src: qSrc.value.trim(),
+            type: qType.value || 'community',
+            sort_order: qSort.value === '' ? null : Number(qSort.value)
+        };
+        const id = quoteId.value;
+        try {
+            const res = await api(id ? ('/api/quotes/' + id) : '/api/quotes', {
+                method: id ? 'PUT' : 'POST',
+                body: JSON.stringify(body)
+            });
+            if (res.ok || res.status === 201) {
+                closeModal();
+                await loadQuotes();
+            } else {
+                const data = await res.json().catch(() => ({}));
+                alert(data.detail || '保存失败，请重试');
+            }
+        } catch (err) {
+            if (err.message !== '请先登录') alert('网络错误，请重试');
+        }
+    });
+
+    document.getElementById('addQuoteBtn').addEventListener('click', function () { openModal(null); });
+    document.getElementById('modalClose').addEventListener('click', closeModal);
+    document.getElementById('formCancel').addEventListener('click', closeModal);
+    quoteModal.addEventListener('click', function (e) { if (e.target === quoteModal) closeModal(); });
+    document.getElementById('backBtn').addEventListener('click', function () { location.href = '/admin'; });
+    document.getElementById('loginBackBtn').addEventListener('click', function () { location.href = '/admin'; });
+
+    async function checkAdminSession() {
+        try {
+            const res = await fetch(`${API_BASE}/api/admin/check`, { credentials: 'include' });
+            if (res.ok) {
+                const data = await res.json();
+                return data.authenticated === true;
+            }
+        } catch (e) {}
+        return false;
+    }
+
+    async function handleLogin() {
+        const pw = document.getElementById('loginPassword').value;
+        if (!pw) return;
+        const btn = document.getElementById('loginBtn');
+        btn.disabled = true;
+        btn.textContent = '验证中...';
+        try {
+            const res = await fetch(`${API_BASE}/api/admin/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: pw }),
+                credentials: 'include'
+            });
+            if (res.ok) {
+                document.getElementById('loginError').textContent = '';
+                loginOverlay.classList.add('hidden');
+                if (!ready) {
+                    ready = true;
+                    loadQuotes();
+                }
+            } else {
+                const data = await res.json().catch(() => ({}));
+                document.getElementById('loginError').textContent = data.detail || '密码错误，请重试';
+                document.getElementById('loginPassword').value = '';
+            }
+        } catch (e) {
+            document.getElementById('loginError').textContent = '网络错误，请重试';
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '进入语录管理';
+        }
+    }
+
+    document.getElementById('loginBtn').addEventListener('click', handleLogin);
+    document.getElementById('loginPassword').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') handleLogin();
+    });
+
+    (async function () {
+        if (await checkAdminSession()) {
+            loginOverlay.classList.add('hidden');
+            ready = true;
+            loadQuotes();
+        }
+    })();
+</script>
+</body>
+</html>

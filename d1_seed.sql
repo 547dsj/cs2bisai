@@ -29,3 +29,16 @@ INSERT INTO events(name,org,level,start_date,end_date,location,prize,champion,ru
 INSERT INTO events(name,org,level,start_date,end_date,location,prize,champion,runnerup,mvp,score,champion_roster,runnerup_roster) VALUES ('FiRe 布宜诺斯艾利斯Major 2027', '其他', 'S级(Major)', '2027-05-31', '2027-06-20', '阿根廷', 1, NULL, NULL, NULL, NULL, '[]', '[]');
 INSERT INTO events(name,org,level,start_date,end_date,location,prize,champion,runnerup,mvp,score,champion_roster,runnerup_roster) VALUES ('完美世界电竞 上海Major 2027', '完美世界', 'S级(Major)', '2027-11-22', '2027-12-12', '中国上海', 1, NULL, NULL, NULL, NULL, '[]', '[]');
 INSERT INTO events(name,org,level,start_date,end_date,location,prize,champion,runnerup,mvp,score,champion_roster,runnerup_roster) VALUES ('BLAST 乌兰巴托公开赛 2027', 'BLAST', 'S级', '2027-05-10', '2027-05-23', '蒙古', 1250000, NULL, NULL, NULL, NULL, '[]', '[]');
+
+DELETE FROM quotes;
+INSERT INTO quotes(text_zh,text_en,source,type,sort_order) VALUES
+('我愿意用所有 MVP 奖牌，换一座 Major 冠军奖杯。', 'I''d trade all my MVP medals for one Major trophy.', 'NiKo · G2', 'player', 1),
+('"Are you kidding me?!" —— 那是 CS 史上最经典的解说瞬间。', '"Are you kidding me?!" — an all-time caster moment.', 'Anders Blume · 解说', 'caster', 2),
+('Born to Win —— 天生要赢。', 'Born to Win.', 'NAVI 官方口号', 'official', 3),
+('V for Victory —— 为胜利而生。', 'V for Victory.', 'Vitality 官方口号', 'official', 4),
+('年龄只是数字，热爱才是引擎。', 'Age is just a number — passion is the engine.', 'karrigan · FaZe（大意）', 'player', 5),
+('Rush B 不需要理由。', 'Rush B needs no reason.', '社区语录', 'community', 6),
+('五个人的游戏，缺一不可。', 'A five-man game — everyone counts.', '社区语录', 'community', 7),
+('ECO 局，也要打出长枪局的气势。', 'Play an eco like a full buy.', '社区语录', 'community', 8),
+('坚持到最后一秒，奇迹才会上演。', 'Miracles happen in the final second.', '社区语录', 'community', 9),
+('一座 Major，一条走了十年的路。', 'One Major — a decade-long road.', '社区语录', 'community', 10);

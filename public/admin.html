@@ -1201,6 +1201,7 @@
         <button class="reset-btn" id="resetFilters">重置筛选</button>
     </div>
         <div class="toolbar">
+        <button class="btn" id="quotesManagerBtn">管理开头语录</button>
         <button class="btn btn-primary" id="addBtn">＋ 添加比赛</button>
         <button class="btn btn-danger" id="deleteBtn">删除比赛</button>
         <button class="btn" id="cancelDeleteBtn">取消删除</button>
@@ -2030,6 +2031,10 @@
     document.getElementById('loginBtn').addEventListener('click', handleLogin);
     document.getElementById('loginPassword').addEventListener('keydown', function (e) {
         if (e.key === 'Enter') handleLogin();
+    });
+
+    document.getElementById('quotesManagerBtn').addEventListener('click', function () {
+        location.href = '/admin/quotes';
     });
 
     (async function () {

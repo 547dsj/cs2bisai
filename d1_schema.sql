@@ -24,3 +24,11 @@ CREATE TABLE IF NOT EXISTS rate_limits (
     reset_at INTEGER NOT NULL
 );
 INSERT OR IGNORE INTO site_settings(setting_key, setting_value) VALUES('last_modified', datetime('now','localtime'));
+CREATE TABLE IF NOT EXISTS quotes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    text_zh TEXT NOT NULL,
+    text_en TEXT NOT NULL DEFAULT '',
+    source TEXT NOT NULL DEFAULT '',
+    type TEXT NOT NULL DEFAULT 'community',
+    sort_order INTEGER NOT NULL DEFAULT 0
+);
