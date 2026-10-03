@@ -2583,24 +2583,77 @@
     });
 
     let heroVideoActive = false;
-    function activateHeroVideo() {
-        if (heroVideoActive) return;
-        heroVideoActive = true;
-        heroField.stop();
-    }
-    heroVideo.addEventListener('playing', activateHeroVideo);
-    heroVideo.addEventListener('error', function () {
+    let heroVideoFallback = false;
+    let lastVideoTime = -1;
+    let videoStallTicks = 0;
+    let videoResumeAttempts = 0;
+
+    function fallbackToParticles() {
+        if (heroVideoFallback) return;
+        heroVideoFallback = true;
+        heroVideoActive = false;
         heroVideo.style.display = 'none';
         heroField.start();
+    }
+
+    function activateHeroVideo() {
+        heroVideoFallback = false;
+        heroVideoActive = true;
+        videoResumeAttempts = 0;
+        heroField.stop();
+    }
+
+    function resumeHeroVideo() {
+        if (heroVideoFallback || !heroVideoActive) return;
+        const p = heroVideo.play();
+        if (p && typeof p.catch === 'function') p.catch(fallbackToParticles);
+    }
+
+    heroVideo.addEventListener('playing', function () {
+        activateHeroVideo();
+        lastVideoTime = heroVideo.currentTime;
+        videoStallTicks = 0;
     });
+    heroVideo.addEventListener('pause', function () {
+        if (heroVideoActive && !heroVideoFallback && !document.hidden) {
+            setTimeout(resumeHeroVideo, 300);
+        }
+    });
+    heroVideo.addEventListener('error', fallbackToParticles);
+
     heroField.start();
     const videoPromise = heroVideo.play();
     if (videoPromise && typeof videoPromise.catch === 'function') {
-        videoPromise.catch(function () {
-            heroVideo.style.display = 'none';
-            heroField.start();
-        });
+        videoPromise.catch(fallbackToParticles);
     }
+
+    // 卡住检测：视频应播放但画面长时间不前进时自动重播；多次失败回退到粒子背景
+    setInterval(function () {
+        if (!heroVideoActive || heroVideoFallback || document.hidden) return;
+        if (heroVideo.paused || heroVideo.ended) {
+            resumeHeroVideo();
+            return;
+        }
+        if (heroVideo.currentTime === lastVideoTime) {
+            videoStallTicks += 1;
+        } else {
+            videoStallTicks = 0;
+        }
+        lastVideoTime = heroVideo.currentTime;
+        if (videoStallTicks >= 3) {
+            videoStallTicks = 0;
+            videoResumeAttempts += 1;
+            if (videoResumeAttempts >= 3) fallbackToParticles();
+            else resumeHeroVideo();
+        }
+    }, 2000);
+
+    document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) resumeHeroVideo();
+    });
+    window.addEventListener('focus', function () {
+        resumeHeroVideo();
+    });
 
     let dataFieldVisible = false;
     const dataVisObserver = new IntersectionObserver(function (entries) {
