@@ -374,7 +374,7 @@
         <table>
             <thead>
             <tr>
-                <th style="width:60px;">ID</th>
+                <th style="width:60px;">序号</th>
                 <th>语录内容（中文）</th>
                 <th>英文翻译</th>
                 <th>署名</th>
@@ -467,10 +467,10 @@
     }
 
     function renderQuotes() {
-        quoteTableBody.innerHTML = quotesData.map(function (q) {
+        quoteTableBody.innerHTML = quotesData.map(function (q, index) {
             const type = q.type || 'community';
             return '<tr>' +
-                '<td>' + q.id + '</td>' +
+                '<td>' + (index + 1) + '</td>' +
                 '<td class="quote-zh">' + escapeHtml(q.zh) + '</td>' +
                 '<td class="quote-en">' + escapeHtml(q.en || '—') + '</td>' +
                 '<td>' + escapeHtml(q.src || '—') + '</td>' +
