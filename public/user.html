@@ -380,7 +380,6 @@
             background: linear-gradient(90deg, var(--cyan), var(--violet));
         }
         .quote-progress i.run { animation: quote-progress-fill var(--quote-ms, 7000ms) linear forwards; }
-        .quote-stage.paused .quote-progress i { animation-play-state: paused; }
         @keyframes quote-progress-fill { from { width: 0; } to { width: 100%; } }
         .quote-controls {
             display: flex;
@@ -2319,7 +2318,8 @@
     let quotePool = [];
     let currentQuote = null;
     let prevStack = [];
-    let quoteTimer = null;
+    let quoteTick = null;
+    const QUOTE_INTERVAL_MS = 7000;
 
     function randomQuote() {
         if (!quotePool.length) return null;
@@ -2344,29 +2344,33 @@
             quoteSource.className = 'quote-source type-' + (q.type || 'community');
             quoteText.classList.remove('fade-out');
         }, instant ? 0 : 170);
+        beginQuoteCycle();
+    }
+
+    function beginQuoteCycle() {
+        if (quoteTick) clearInterval(quoteTick);
+        quoteTick = null;
         quoteProgress.classList.remove('run');
         void quoteProgress.offsetWidth;
+        if (reduceMotion || !currentQuote) return;
+        const start = Date.now();
         quoteProgress.classList.add('run');
+        quoteTick = setInterval(function () {
+            if (Date.now() - start >= QUOTE_INTERVAL_MS) {
+                nextQuote();
+            }
+        }, 400);
     }
 
     function nextQuote() {
         if (currentQuote) prevStack.push(currentQuote);
         if (prevStack.length > 100) prevStack.shift();
         displayQuote(randomQuote() || currentQuote);
-        startQuoteTimer();
     }
 
     function prevQuote() {
         const target = prevStack.length ? prevStack.pop() : (randomQuote() || currentQuote);
         displayQuote(target);
-        startQuoteTimer();
-    }
-
-    function startQuoteTimer() {
-        if (quoteTimer) clearTimeout(quoteTimer);
-        if (!reduceMotion) {
-            quoteTimer = setTimeout(nextQuote, 7000);
-        }
     }
 
     async function loadQuotes() {
@@ -2390,22 +2394,17 @@
         quotePool = pool.length ? pool : DEFAULT_QUOTES;
         quoteCount.textContent = quotePool.length ? ('语录库 · ' + quotePool.length + ' 条') : '';
         displayQuote(randomQuote(), true);
-        startQuoteTimer();
     }
 
     quotePrevBtn.addEventListener('click', prevQuote);
     quoteNextBtn.addEventListener('click', nextQuote);
 
-    if (window.matchMedia('(hover: hover)').matches) {
-        quoteStage.addEventListener('mouseenter', function () {
-            quoteStage.classList.add('paused');
-            if (quoteTimer) clearTimeout(quoteTimer);
-        });
-        quoteStage.addEventListener('mouseleave', function () {
-            quoteStage.classList.remove('paused');
-            startQuoteTimer();
-        });
-    }
+    document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) beginQuoteCycle();
+    });
+    window.addEventListener('focus', function () {
+        beginQuoteCycle();
+    });
 
     let touchStartX = 0;
     let touchStartY = 0;
